@@ -1,5 +1,5 @@
 import struct
-import StringIO
+from six import StringIO
 
 Inst = struct.Struct("BBHI")
 
@@ -155,7 +155,7 @@ def disassemble_one(data, offset):
         return "unknown instruction %#x" % code
 
 def disassemble(data):
-    output = StringIO.StringIO()
+    output = StringIO()
     offset = 0
     while offset < len(data):
         s = disassemble_one(data, offset)

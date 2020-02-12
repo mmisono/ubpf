@@ -10,6 +10,7 @@ from elftools.construct import Container
 from elftools.elf.constants import SH_FLAGS
 import testdata
 import ubpf.assembler
+import six
 VM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "vm", "test")
 
 def template():
@@ -153,12 +154,20 @@ def serialize(parts):
             serializer = s.Elf_Rel.build
         elif name.endswith('sym'):
             serializer = s.Elf_Sym.build
-        data = serializer(part)
+        if serializer != str or six.PY2:
+            data = serializer(part)
+        elif type(part) != bytes:
+            data = part.encode("utf-8")
+        else:
+            data = part
         tmp.append(data)
         #sys.stderr.write("Wrote %s size %d at offset %d\n" % (name, len(data), offset))
         offset += len(data)
 
-    return ''.join(tmp)
+    if six.PY2:
+        return ''.join(tmp)
+    else:
+        return b''.join(tmp)
 
 def generate_elf(pyelf):
     parts = template()
@@ -185,6 +194,9 @@ def check_datafile(filename):
     vm = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     stdout, stderr = vm.communicate(elf)
+    if six.PY3:
+        stdout = stdout.decode("utf-8")
+        stderr = stderr.decode("utf-8")
     stderr = stderr.strip()
 
     if 'error' in data:
