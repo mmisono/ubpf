@@ -3,6 +3,11 @@ compiler:
   - gcc
 python:
   - "2.7"
+  - "3.6"
+jobs:
+  include:
+    - python: '2.7'
+    - python: '3.6'
 # command to install dependencies
 install: 
   - pip install --user -r requirements.txt
