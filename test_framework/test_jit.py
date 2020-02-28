@@ -6,8 +6,11 @@ from subprocess import Popen, PIPE
 from nose.plugins.skip import Skip, SkipTest
 import ubpf.assembler
 import testdata
-import six
 VM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "vm", "test")
+try:
+    xrange
+except NameError:
+    xrange = range
 
 def check_datafile(filename):
     """
@@ -25,10 +28,7 @@ def check_datafile(filename):
         raise SkipTest("JIT disabled for this testcase (%s)" % data['no jit'])
 
     if 'raw' in data:
-        if six.PY2:
-            code = ''.join(struct.pack("=Q", x) for x in data['raw'])
-        else:
-            code = b''.join(struct.pack("=Q", x) for x in data['raw'])
+        code = b''.join(struct.pack("=Q", x) for x in data['raw'])
     else:
         code = ubpf.assembler.assemble(data['asm'])
 
@@ -45,7 +45,7 @@ def check_datafile(filename):
         num_register_offsets = 1
 
     try:
-        for register_offset in six.moves.xrange(0, num_register_offsets):
+        for register_offset in xrange(0, num_register_offsets):
             cmd = [VM]
             if memfile:
                 cmd.extend(['-m', memfile.name])
@@ -54,9 +54,8 @@ def check_datafile(filename):
             vm = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
             stdout, stderr = vm.communicate(code)
-            if six.PY3:
-                stdout = stdout.decode("utf-8")
-                stderr = stderr.decode("utf-8")
+            stdout = stdout.decode("utf-8")
+            stderr = stderr.decode("utf-8")
             stderr = stderr.strip()
 
             if 'error' in data:

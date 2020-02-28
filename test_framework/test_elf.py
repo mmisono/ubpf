@@ -10,7 +10,6 @@ from elftools.construct import Container
 from elftools.elf.constants import SH_FLAGS
 import testdata
 import ubpf.assembler
-import six
 VM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "vm", "test")
 
 def template():
@@ -112,7 +111,7 @@ exit
     text = ubpf.assembler.assemble(asm)
 
     add("text", text)
-    add("strtab", "\0.text\0.strtab\0.symtab\0.rel\0sqrti\0")
+    add("strtab", b"\0.text\0.strtab\0.symtab\0.rel\0sqrti\0")
     add("first_sym", Container(
         st_name=0,
         st_value=0,
@@ -145,7 +144,7 @@ def serialize(parts):
 
     for name in parts['order']:
         part = parts[name]
-        serializer = str
+        serializer = lambda x: x
         if name == 'ehdr':
             serializer = s.Elf_Ehdr.build
         elif name.endswith('shdr'):
@@ -154,20 +153,13 @@ def serialize(parts):
             serializer = s.Elf_Rel.build
         elif name.endswith('sym'):
             serializer = s.Elf_Sym.build
-        if serializer != str or six.PY2:
-            data = serializer(part)
-        elif type(part) != bytes:
-            data = part.encode("utf-8")
-        else:
-            data = part
+
+        data = serializer(part)
         tmp.append(data)
         #sys.stderr.write("Wrote %s size %d at offset %d\n" % (name, len(data), offset))
         offset += len(data)
 
-    if six.PY2:
-        return ''.join(tmp)
-    else:
-        return b''.join(tmp)
+    return b''.join(tmp)
 
 def generate_elf(pyelf):
     parts = template()
@@ -194,9 +186,8 @@ def check_datafile(filename):
     vm = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     stdout, stderr = vm.communicate(elf)
-    if six.PY3:
-        stdout = stdout.decode("utf-8")
-        stderr = stderr.decode("utf-8")
+    stdout = stdout.decode("utf-8")
+    stderr = stderr.decode("utf-8")
     stderr = stderr.strip()
 
     if 'error' in data:

@@ -6,7 +6,6 @@ from subprocess import Popen, PIPE
 from nose.plugins.skip import Skip, SkipTest
 import ubpf.assembler
 import testdata
-import six
 VM = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "vm", "test")
 
 def check_datafile(filename):
@@ -23,10 +22,7 @@ def check_datafile(filename):
         raise SkipTest("VM not found")
 
     if 'raw' in data:
-        if six.PY2:
-            code = ''.join(struct.pack("=Q", x) for x in data['raw'])
-        else:
-            code = b''.join(struct.pack("=Q", x) for x in data['raw'])
+        code = b''.join(struct.pack("=Q", x) for x in data['raw'])
     else:
         code = ubpf.assembler.assemble(data['asm'])
 
@@ -44,9 +40,8 @@ def check_datafile(filename):
     vm = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     stdout, stderr = vm.communicate(code)
-    if six.PY3:
-        stdout = stdout.decode("utf-8")
-        stderr = stderr.decode("utf-8")
+    stdout = stdout.decode("utf-8")
+    stderr = stderr.decode("utf-8")
     stderr = stderr.strip()
 
     if memfile:

@@ -1,9 +1,8 @@
 from .asm_parser import parse, Reg, Imm, MemRef
 import struct
-import six
-if six.PY2:
+try:
     from StringIO import StringIO as io
-else:
+except ModuleNotFoundError:
     from io import BytesIO as io
 
 Inst = struct.Struct("BBHI")

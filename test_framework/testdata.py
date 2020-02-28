@@ -1,6 +1,5 @@
 import os
 import re
-import six
 
 _test_data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../tests")
 
@@ -74,9 +73,6 @@ def read(name):
             if ':' in line:
                 line = line[(line.rindex(':')+1):]
             hex_strs.extend(re.findall(r"[0-9A-Fa-f]{2}", line))
-        if six.PY2:
-            data['mem'] = ''.join([chr(int(x, 16)) for x in hex_strs])
-        else:
-            data['mem'] = b''.join([int(x, 16).to_bytes(1, "little") for x in hex_strs])
+        data['mem'] = bytes(bytearray([(int(x, 16)) for x in hex_strs]))
 
     return data
