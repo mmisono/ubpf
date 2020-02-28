@@ -1,7 +1,7 @@
 import struct
 try:
     from StringIO import StringIO as io
-except ModuleNotFoundError:
+except ImportError:
     from io import StringIO as io
 
 Inst = struct.Struct("BBHI")
